@@ -28,6 +28,7 @@
 		EOT.lessons = [];
 		EOT.lessonsTab = null;
 		EOT.zbStorage = {};
+		EOT.failStorage = {};
 		EOT.rwpjOffset = 0;
 
 		// 初始化
@@ -217,7 +218,13 @@
 					$this.startPJ();
 				},
 				error: function() {
-					$.jGrowl("<p class='text-danger'><b>" + lesson + "</b> 评教失败!</p>");
+					$this.failStorage[rel] = $this.failStorage[rel] ? $this.failStorage[rel]+1 : 1;
+					if($this.failStorage[rel] > 3) {
+						$this.rwpjOffset++;
+						$("#TOPLEFT").jGrowl("<p class='text-danger'><b>" + lesson + "</b> 连续3次评教失败 已自动跳过!</p>", {sticky:true});
+					} else {
+						$.jGrowl("<p class='text-danger'><b>" + lesson + "</b> 评教失败!</p>");
+					}
 					$this.startPJ();
 				}
 			});
