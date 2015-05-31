@@ -152,7 +152,7 @@
 				this.rwpjOffset++;
 				return this.startPJ();
 			} else if(!this.dateCheck(this.lessons[this.rwpjOffset].starttime, this.lessons[this.rwpjOffset].endtime)) {
-				$.jGrowl("<p class='text-danger'><b>" + this.lessons[this.rwpjOffset].lesson + "</b>不在评教时间内 已自动跳过</p>");
+				$("#TOPLEFTMSG").jGrowl("<p class='text-danger'><b>" + this.lessons[this.rwpjOffset].lesson + "</b>不在评教时间内 已自动跳过</p>", {sticky:true});
 				this.rwpjOffset++;
 				return this.startPJ();
 			}
