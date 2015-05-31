@@ -151,6 +151,9 @@
 			} else if(this.lessons[this.rwpjOffset].status != "未评") {
 				this.rwpjOffset++;
 				return this.startPJ();
+			} else if(!this.dateCheck(this.lessons[this.rwpjOffset].starttime, this.lessons[this.rwpjOffset].endtime)) {
+				this.rwpjOffset++;
+				return $.jGrowl("<p class='text-danger'><b>" + this.lessons[this.rwpjOffset] + "</b>不在评教时间内 已自动跳过</p>");
 			}
 
 			var rel = this.lessons[this.rwpjOffset].rel;
@@ -245,6 +248,35 @@
 					if(callback) callback.call($this, json);
 				}
 			});
+		};
+
+		// 检查评教时间
+		EOT.dateCheck = function(startdate, enddate) {
+			var now = (new Date).getTime();
+			var start = this.strtodate(startdate, 0, 0, 0, 0).getTime();
+			var end = this.strtodate(enddate, 23, 59, 59, 0).getTime();
+			return now >= start && now <= end;
+		};
+
+		// 将形如 2015-01-01 的日期字串转换为 Date 对象
+		EOT.strtodate = function(str, hour, minute, second, millisec) {
+			var date = new Date();
+			var tmp = str.match(/(\d+)-(\d+)-(\d+)/);
+			var year = tmp[1] | 0;
+			var month = tmp[2] | 0;
+			var day = tmp[3] | 0;
+			hour = hour || 0;
+			minute = minute || 0;
+			second = second || 0;
+			millisec = millisec || 0;
+			date.setFullYear(year);
+			date.setMonth(month ? month - 1 : 0);
+			date.setDate(day);
+			date.setHours(hour);
+			date.setMinutes(minute);
+			date.setSeconds(second);
+			date.setMilliseconds(millisec);
+			return date;
 		};
 
 		EOT.init();
