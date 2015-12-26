@@ -17,7 +17,7 @@
 
 (function() {
 
-  if(typeof unsafeWindow == 'undefined' && !window.$ && unsafeWindow.$) {
+  if(typeof unsafeWindow != 'undefined' && !window.$ && unsafeWindow.$) {
     window.$ = unsafeWindow.$;
   } else {
     return exec(wrapper);
