@@ -2,10 +2,10 @@
 // @name        武理工教务系统自动批量教学评价
 // @namespace   whuteot
 // @description 武汉理工大学 学分制教务管理信息系统 自动教学评价 全选A 跳过问卷调查
-// @author      Token Team
+// @author      Anonymous
 // @include     http://202.114.90.180/EOT/*
 // @run-at      document-end
-// @version     2.0
+// @version     2.1
 // @grant       unsafeWindow
 // @grant       GM_addStyle
 // @grant       GM_getValue
@@ -210,21 +210,31 @@
 
     // 显示开始评教按钮
     EOT.showStartButton = function() {
-      $("<a href='#'>开始评教</a>").css({
+      $("<a href='#' class='btn-startpj'>开始评教</a>").css({
         "z-index"     : 10000,
         "position"    : "absolute",
         "top"         : "55px",
         "right"       : "24px",
         "padding"     : "0 8px",
         "color"       : "#ffffff",
-        "background"  : "#000000",
+        "background"  : "rgba(0,0,0,.6)",
         "font-family" : '"Segoe UI", "Lucida Grande", Helvetica, Arial, "Microsoft YaHei Light", "Microsoft YaHei", FreeSans, Arimo, "Droid Sans","wenquanyi micro hei","Hiragino Sans GB", "Hiragino Sans GB W3", sans-serif',
-        "font-size"   : "16px",
-        "opacity"     : 0.6
+        "font-size"   : "16px"
       }).click(function() {
         EOT.showLessonsListTab();
         $(this).remove();
       }).appendTo("body");
+      var css = "";
+      css += '<style type="text/css">';
+      css += '.btn-startpj { animation: pulse 1.2s infinite; }';
+      css += '@keyframes pulse {';
+      css += '  0% { outline:rgba(221,107,85,1) solid 2px; box-shadow:rgba(221,107,85,1) 0px 0px 0px; outline-offset:0; background:rgba(0,0,0,.6); }';
+      css += '  10% { background:rgba(221,107,85,.6); }';
+      css += '  80% { background:rgba(0,0,0,.6); }';
+      css += '  100% { outline:rgba(221,107,85,0) solid 2px; box-shadow:rgba(221,107,85,0) 0px 0px 12px; outline-offset:12px; }';
+      css += '}';
+      css += '</style>';
+      $("head").append(css);
     };
 
     // 加载 jGrowl 插件
@@ -242,13 +252,13 @@
       css += '.text-muted { color: #777; }';
       css += '.text-primary { color: #428bca; }';
       css += 'a.text-primary:hover { color: #3071a9; }';
-      css += '.text-success { color: #3c763d; }';
+      css += '.text-success { color: #2ECC40; }';
       css += 'a.text-success:hover { color: #2b542c; }';
       css += '.text-info { color: #31708f; }';
       css += 'a.text-info:hover { color: #245269; }';
       css += '.text-warning { color: #8a6d3b; }';
       css += 'a.text-warning:hover { color: #66512c; }';
-      css += '.text-danger { color: #a94442; }';
+      css += '.text-danger { color: #FF4136; }';
       css += 'a.text-danger:hover { color: #843534; }';
       css += '.bg-primary { color: #fff; background-color: #428bca; }';
       css += 'a.bg-primary:hover { background-color: #3071a9; }';
@@ -272,19 +282,13 @@
       this.registerStyle();
       $.jGrowl("正在读取课程评教列表...");
       $("#sidebar > .accordion.dwz-accordion > .accordionContent a[rel='pjkcList']").click();
-      var $this = this;
-      setTimeout(function() {
-        $this.detectLessonsListTab.call($this);
-      }, 400);
+      setTimeout(this.detectLessonsListTab.bind(this), 400);
     };
 
     // 判断课程评教选项卡是否已加载完成
     EOT.detectLessonsListTab = function() {
       if(navTab._indexTabId("pjkcList") == -1 || $("#progressBar").is(":visible")) {
-        var $this = this;
-        return setTimeout(function() {
-          $this.detectLessonsListTab.call($this);
-        }, 400);
+        return setTimeout(this.detectLessonsListTab.bind(this), 400);
       }
       $.jGrowl("课程评教列表已加载完成");
       this.collectLessons();
@@ -318,8 +322,8 @@
       } else if(this.lessons[this.rwpjOffset].status != "未评") {
         this.rwpjOffset++;
         return this.startPJ();
-      } else if(!this.dateCheck(this.lessons[this.rwpjOffset].starttime, this.lessons[this.rwpjOffset].endtime, true)) {
-        $("#TOPLEFTMSG").jGrowl("<p><b>" + this.lessons[this.rwpjOffset].lesson + "</b>不在评教时间内 已自动跳过</p>", {sticky:true});
+      } else if(!this.dateCheck(this.lessons[this.rwpjOffset].starttime, this.lessons[this.rwpjOffset].endtime)) {
+        $("#TOPLEFTMSG").jGrowl("<p><b>" + this.lessons[this.rwpjOffset].lesson + "</b><br>不在评教时间内</p>", {sticky:true});
         this.rwpjOffset++;
         return this.startPJ();
       }
@@ -335,13 +339,15 @@
         },
         fail: function(pjrwdm, data) {
           console.error(lesson.lesson, pjrwdm, data);
-          $("#TOPLEFT").jGrowl("<p class='text-danger'><b>" + lesson.lesson + "</b> 评教失败 已自动跳过!<br>失败详情可在 Console 中查看</p>", {sticky:true});
+          var message = data && data.message || "失败详情可在 Console 中查看";
+          $("#TOPLEFTMSG").jGrowl("<p class='text-danger'><b>" + lesson.lesson + "</b><br>" + message + "</p>", {sticky:true});
           $this.rwpjOffset++;
           $this.startPJ();
         },
         error: function(errmsg, data) {
           console.error(lesson.lesson, errmsg, data);
-          $("#TOPLEFT").jGrowl("<p class='text-danger'><b>" + lesson.lesson + "</b> 评教失败 已自动跳过!<br>失败详情可在 Console 中查看</p>", {sticky:true});
+          var message = data && data.message || "失败详情可在 Console 中查看";
+          $("#TOPLEFTMSG").jGrowl("<p class='text-danger'><b>" + lesson.lesson + "</b><br>" + message + "</p>", {sticky:true});
           $this.rwpjOffset++;
           $this.startPJ();
         }
@@ -350,11 +356,17 @@
     };
 
     // 检查评教时间
-    EOT.dateCheck = function(startdate, enddate, ignoreEnddate) {
+    EOT.dateCheck = function(startdate, enddate, ignoreEndDate, ignoreStartDate) {
       var now = (new Date).getTime();
       var start = this.strtodate(startdate, 0, 0, 0, 0).getTime();
       var end = this.strtodate(enddate, 23, 59, 59, 0).getTime();
-      return ignoreEnddate ? now >= start : now >= start && now <= end;
+      if(ignoreStartDate) {
+        return now <= end;
+      }
+      if(ignoreEndDate) {
+        return now >= start;
+      }
+      return now >= start && now <= end;
     };
 
     // 将形如 2015-01-01 的日期字串转换为 Date 对象
